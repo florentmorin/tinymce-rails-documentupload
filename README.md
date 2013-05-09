@@ -16,7 +16,7 @@
 
 ### Add the gem to your Gemfile
 
-    gem 'tinymce-rails-documentupload', '~> 3.5.8.1'
+    gem 'tinymce-rails-documentupload', '~> 3.5.8.7'
 
 ### Set up TinyMCE as you would normally, but in the call to `.tinymce()`, add
 
