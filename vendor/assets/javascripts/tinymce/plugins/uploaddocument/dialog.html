@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>{#uploaddocument_dlg.title}</title>
+    <style type="text/css">
+      form { margin-top: 0.5em; }
+      label { margin-bottom: 0.5em; }
+      p#error_message { color: #E00; }
+      #upload_spinner { padding-top: 4px; padding-left: 3px; }
+      #upload_spinner.inactive { display: none; }
+    </style>
+    <script type="text/javascript" src="../../tiny_mce_popup.js"></script>
+    <script type="text/javascript">
+      tinyMCEPopup.requireLangPack();
+
+      var UploadDocumentDialog = {
+
+        init: function() {
+          this.f = document.forms[0];
+          this.f.action = tinyMCEPopup.getParam("uploaddocument_form_url", "/tinymce_documents");
+          document.getElementById("hint").value = tinyMCEPopup.getParam("uploaddocument_hint", "");
+          document.getElementById("authenticity_token").value = this.getMetaContents('csrf-token');
+
+          this.iframe = document.getElementById("hidden_upload");
+        },
+
+        insert: function() {
+          // Detach events first, then attach to avoid double event triggering
+          if(this.iframe.attachEvent) {
+            this.iframe.detachEvent('onload', UploadDocumentDialog.uploadDone);
+            this.iframe.attachEvent('onload', UploadDocumentDialog.uploadDone);
+          } else {
+            this.iframe.removeEventListener('load', UploadDocumentDialog.uploadDone);
+            this.iframe.addEventListener('load', UploadDocumentDialog.uploadDone, false);
+          }
+          var input = document.getElementById("file_upload");
+
+          if(input.value != "") {
+            document.getElementById("upload_spinner").className = '';
+            this.f.submit();
+          } else {
+            this.handleError(tinyMCEPopup.getLang("uploaddocument_dlg.blank_input", "Must choose a file"));
+          }
+        },
+
+        uploadDone: function() {
+          document.getElementById("upload_spinner").className = 'inactive';
+          var iframe = document.getElementById("hidden_upload");
+          if(iframe.document || iframe.contentDocument) {
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            UploadDocumentDialog.handleResponse(doc.getElementsByTagName("body")[0].innerHTML);
+          } else {
+            UploadDocumentDialog.handleError(tinyMCEPopup.getLang("uploaddocument_dlg.blank_response", "Didn't get a response from the server"));
+          }
+        },
+
+        handleResponse: function(ret) {
+          try {
+            var json = JSON.parse(ret);
+
+            if(json["error"])
+              UploadDocumentDialog.handleError(json["error"]["message"]);
+            else {
+              tinyMCE.execCommand('mceInsertContent', false, UploadDocumentDialog.buildHTML(json));
+              tinyMCEPopup.close();
+            }
+          } catch(e) {
+            UploadDocumentDialog.handleError(tinyMCEPopup.getLang("uploaddocument_dlg.bad_response", "Got a bad response from the server"));
+          }
+        },
+
+        buildHTML: function(json) {
+          var default_class = tinyMCEPopup.getParam("uploaddocument_default_a_class", "");
+          var alt_text = document.getElementById("alt_text").value;
+
+          var docstr = "<a href='" + json["document"]["url"] + "' target='_blank' type='octet-stream'";
+
+          if (default_class != "") {
+            docstr += " class='" + default_class + "'";
+					}
+					
+					docstr += '>'
+
+					if (json["document"]["thumb"] && json["document"]["thumb"]["url"]) {
+						thumb_json = json["document"]["thumb"];
+						
+						docstr += "><img src='" + thumb_json["url"] + "'";
+						
+          	if (thumb_json["height"]) {
+            	docstr += " height='" + thumb_json["height"] + "'";
+						}
+          	
+						if (thumb_json["width"]) {
+            	docstr += " width='" + thumb_json["width"] + "'";
+						}
+						
+						docstr += " alt='" + alt_text + "' />";
+					} else {
+						docstr +=  ">" + alt_text;
+					}
+					
+					docstr += "</a>";
+
+          return docstr;
+        },
+
+        handleError: function(error) {
+          var className = 'invalid';
+          var label   = document.getElementById("file_upload_label");
+          var message = document.getElementById("error_message");
+
+          if(message)
+            message.innerHTML = error;
+
+          // Add the 'invalid' class, avoiding duplicates
+          if(label) {
+            var cn = label.className;
+            if(cn.indexOf(className) == -1) {
+              if(cn != '')
+              	className = ' ' + className;
+              label.className = cn + className;
+            }
+          }
+        },
+
+        getMetaContents: function(mn) {
+          var m = (window.opener || window.parent).document.getElementsByTagName('meta');
+
+          for(var i in m)
+            if(m[i].name == mn)
+              return m[i].content;
+
+          return null;
+        },
+      };
+
+      tinyMCEPopup.onInit.add(UploadDocumentDialog.init, UploadDocumentDialog);
+    </script>
+  </head>
+  <body>
+    <h1>{#uploaddocument_dlg.header}</h1>
+
+    <form method="post" enctype='multipart/form-data' accept-charset="UTF-8" target="hidden_upload" action='#replaceme' name="uploaddocumentForm">
+      <input type="hidden" name="utf8" value="✓">
+      <input type="hidden" name="authenticity_token" id="authenticity_token" value="#replaceme">
+      <input type="hidden" name="hint" id="hint" value="#replaceme">
+      <iframe id="hidden_upload" name="hidden_upload" src="javascript:void(0)" style='width:0;height:0;border:0px solid #fff'></iframe>
+
+      <label id='file_upload_label' for='file_upload'>{#uploaddocument_dlg.input}:</label>
+      <input type='file' name='file' id='file_upload'>
+      <p id="error_message"></p>
+      <label id='alt_text_label' for='alt_text'>{#uploaddocument_dlg.alt_text}:</label>
+      <input type="text" name="alt" id="alt_text">
+
+      <div class="mceActionPanel">
+        <input type="button" id="insert" name="insert" value="{#uploaddocument_dlg.insert}" onclick="UploadDocumentDialog.insert();"/>
+        <img src="img/spinner.gif" alt="#{uploaddocument_dlg.uploading}" id="upload_spinner" height="16" width="16" class="inactive">
+        <input type="button" id="cancel" name="cancel" value="{#uploaddocument_dlg.cancel}" onclick="tinyMCEPopup.close();" />
+      </div>
+    </form>
+  </body>
+</html>
