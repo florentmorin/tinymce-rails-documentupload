@@ -85,7 +85,7 @@
 					if (json["document"]["thumb"] && json["document"]["thumb"]["url"]) {
 						thumb_json = json["document"]["thumb"];
 						
-						docstr += "><img src='" + thumb_json["url"] + "'";
+						docstr += "<img src='" + thumb_json["url"] + "'";
 						
           	if (thumb_json["height"]) {
             	docstr += " height='" + thumb_json["height"] + "'";
@@ -97,7 +97,7 @@
 						
 						docstr += " alt='" + alt_text + "' />";
 					} else {
-						docstr +=  ">" + alt_text;
+						docstr +=  alt_text;
 					}
 					
 					docstr += "</a>";
