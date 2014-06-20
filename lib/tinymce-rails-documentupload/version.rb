@@ -1,7 +1,7 @@
 module Tinymce
   module Rails
     module Documentupload
-      VERSION = "3.5.8.7"
+      VERSION = "4.0.16.beta"
     end
   end
 end

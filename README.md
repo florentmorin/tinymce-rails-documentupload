@@ -1,3 +1,6 @@
+# IMPORTANT NOTE:
+This version is being rewritten to work with TinyMCE 4.x, and is currently not very tested. Use at your own risk, feedback welcome. For the stable version targetting TinyMCE 3, see the [tinymce3 branch](https://github.com/florentmorin/tinymce-rails-documentupload/tree/tinymce3)
+
 # tinymce-rails-documentupload
 
   Simple plugin for TinyMCE that allows uploading documents and inserting.
@@ -6,22 +9,28 @@
   This plugin is adapted from work done by [Christian Bechström Viken for TinyMCE Rails Image Upload plugin](https://github.com/PerfectlyNormal/tinymce-rails-imageupload).
 
   The icon used for the button comes from the icon set [Silk by famfamfam](http://www.famfamfam.com/lab/icons/silk/) and the spinner image from [ajaxload.info](http://ajaxload.info/).
+  
+  Support for TinyMCE 3 is currently available in the [tinymce3 branch](https://github.com/florentmorin/tinymce-rails-documentupload/tree/tinymce3). The master branch is targetting TinyMCE 4.x.
 
 ## Requirements
 
   * Rails >= 3.1
-  * TinyMCE using the advanced theme
+  * TinyMCE4 using the advanced theme
 
 ## Setup
 
 ### Add the gem to your Gemfile
 
-    gem 'tinymce-rails-documentupload', '~> 3.5.8.7'
+    gem 'tinymce-rails-documentupload', '~> 4.0.0.beta'
+    
+    # or use git
+
+    gem 'tinymce-rails-documentupload', github: 'florentmorin/tinymce-rails-documentupload'
 
 ### Set up TinyMCE as you would normally, but in the call to `.tinymce()`, add
 
     plugins: "uploaddocument"
-    # theme_advanced_buttonsX must include "uploaddocument" somewhere to have the button appear
+    # toolbar option must include "uploaddocument" somewhere to have the button appear
 
   and the rest should happen automatically.
 
@@ -50,7 +59,7 @@
           document: {
             url: view_context.document_url(image)
           }
-        }, content_type: "text/html"
+        }, layout: false, content_type: "text/html"
       end
     end
 
@@ -73,37 +82,23 @@ Example response:
 
 ## Internationalization
 
-I18n is taken care of by `tinymce-rails`. This gem includes strings for english and french.
-To add your own language, create the files `<code>.js` and `<code>_dlg.js` in `vendor/assets/javascripts/tinymce/plugins/uploaddocument/langs` in your application,
-or fork the gem and add your own translations there.
+I18n is taken care of by `tinymce-rails`. This gem includes strings for `en` and `fr`. To add your own language, create the files `<code>.js` in `app/assets/javascripts/tinymce/plugins/uploaddocument/langs` in your application, or fork the gem and add your own translations there.
+  
+The format and available strings are listed below:
 
-To get your custom language precompiled, you have to add it to the list of files manually.
-If you have a fork, just add it to the list in `lib/tinymce-rails-documentupload/rails.rb`, but if you have the translations in the application,
-you can add it like this in `config/application.rb`:
+### fr.js
 
-    config.assets.precompile += %w(tinymce/plugins/uploaddocument/langs/fr.js tinymce/plugins/uploaddocument/langs/fr_dlg.js)
-
-The available strings are listed below:
-
-### en.js
-
-    tinyMCE.addI18n('en.uploaddocument', {
-      desc: 'Insert a document from your computer'
-    });
-
-### en_dlg.js
-
-    tinyMCE.addI18n('en.uploaddocument_dlg', {
-      title: 'Insert document',
-      header: "Insert document",
-      input:  "Choose a document",
-      uploading: "Uploading…",
-      blank_input: "Must choose a file",
-      bad_response: "Got a bad response from the server",
-      blank_response: "Didn't get a response from the server",
-      insert: "Insert",
-      cancel: "Cancel",
-      alt_text: "Document description"
+    tinyMCE.addI18n('fr', {
+      'Insert a document from your computer': 'Insérer un document depuis votre ordinateur',
+      'Insert document': "Insérer un document",
+      'Choose a document': "Choisir un document",
+      'You must choose a file': "Vous devez choisir un fichier",
+      'Got a bad response from the server': "Mauvaise réponse du serveur",
+      "Didn't get a response from the server": "Aucune réponse du serveur",
+      'Insert': "Insérer",
+      'Cancel': "Annuler",
+      'Document description': "Description du document",
+      'Click to download' : "Cliquer pour télécharger",
     });
 
 ## Versioning
